@@ -1,0 +1,1 @@
+This is the output folder, containing the output tracking results in MOT Challenge format.
