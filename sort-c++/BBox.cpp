@@ -136,6 +136,12 @@ void BBox::init_null()
 }
 
 
+float BBox::get_xc(){ return xc; }
+float BBox::get_yc(){ return yc; }
+float BBox::get_s(){ return s; }
+float BBox::get_r(){ return r; }
+
+
 // Computes IOU between two BBoxes
 double BBox::GetIOU(const BBox& bb_test, const BBox& bb_gt)
 {
@@ -153,6 +159,6 @@ double BBox::GetIOU(const BBox& bb_test, const BBox& bb_gt)
 
 std::ostream & operator <<(std::ostream &os, const BBox &bb)
 {
-	os << bb.x << ", " << bb.y << ", " << bb.w << ", " << bb.h << std::endl;
+	os << bb.x << "," << bb.y << "," << bb.w << "," << bb.h;
 	return os;
 }

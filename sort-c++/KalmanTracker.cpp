@@ -32,10 +32,10 @@ void KalmanTracker::init_kf(StateType stateMat)
 	setIdentity(kf.errorCovPost, Scalar::all(1));
 
 	//randn(kf.statePost, Scalar::all(0), Scalar::all(1));
-	kf.statePost.at<float>(0, 0) = stateMat.xc;
-	kf.statePost.at<float>(1, 0) = stateMat.yc;
-	kf.statePost.at<float>(2, 0) = stateMat.s;
-	kf.statePost.at<float>(3, 0) = stateMat.r;
+	kf.statePost.at<float>(0, 0) = stateMat.get_xc();
+	kf.statePost.at<float>(1, 0) = stateMat.get_yc();
+	kf.statePost.at<float>(2, 0) = stateMat.get_s();
+	kf.statePost.at<float>(3, 0) = stateMat.get_r();
 }
 
 
@@ -66,10 +66,10 @@ void KalmanTracker::update(StateType stateMat)
 	m_hit_streak += 1;
 
 	// measurement
-	measurement.at<float>(0, 0) = stateMat.xc;
-	measurement.at<float>(1, 0) = stateMat.yc;
-	measurement.at<float>(2, 0) = stateMat.s;
-	measurement.at<float>(3, 0) = stateMat.r;
+	measurement.at<float>(0, 0) = stateMat.get_xc();
+	measurement.at<float>(1, 0) = stateMat.get_yc();
+	measurement.at<float>(2, 0) = stateMat.get_s();
+	measurement.at<float>(3, 0) = stateMat.get_r();
 
 	// update
 	kf.correct(measurement);

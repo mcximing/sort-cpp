@@ -105,6 +105,7 @@ void TestSORT(string seqName)
 	int min_hits = 3;
 	double iouThreshold = 0.3;
 	vector<KalmanTracker> trackers;
+	KalmanTracker::kf_count = 0; // tracking id relies on this, so we have to reset it in each seq.
 
 	// variables used in the for-loop
 	vector<BBox> predictedBoxes;
@@ -149,7 +150,7 @@ void TestSORT(string seqName)
 			for (unsigned int id = 0; id < detFrameData[fi].size(); id++)
 			{
 				TrackingBox tb = detFrameData[fi][id];
-				resultsFile << tb.frame << "," << id + 1 << "," << tb.box.x << "," << tb.box.y << "," << tb.box.w << "," << tb.box.h << ",1,-1,-1,-1" << endl;
+				resultsFile << tb.frame << "," << id + 1 << "," << tb.box << ",1,-1,-1,-1" << endl;
 			}
 			continue;
 		}
@@ -282,7 +283,7 @@ void TestSORT(string seqName)
 		}
 
 		for (auto tb : frameTrackingResult)
-			resultsFile << tb.frame << "," << tb.id << "," << tb.box.x1 << "," << tb.box.y1 << "," << tb.box.w << "," << tb.box.h << ",1,-1,-1,-1" << endl;
+			resultsFile << tb.frame << "," << tb.id << "," << tb.box << ",1,-1,-1,-1" << endl;
 	}
 
 	resultsFile.close();
@@ -295,7 +296,7 @@ int main()
 	vector<string> sequences = { "PETS09-S2L1", "TUD-Campus", "TUD-Stadtmitte", "ETH-Bahnhof", "ETH-Sunnyday", "ETH-Pedcross2", "KITTI-13", "KITTI-17", "ADL-Rundle-6", "ADL-Rundle-8", "Venice-2" };
 	for (auto seq : sequences)
 		TestSORT(seq);
-	//TestSORT("PETS09-S2L1");
+	//TestSORT("TUD-Campus");
 
 	return 0;
 }
