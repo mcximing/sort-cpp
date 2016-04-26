@@ -37,7 +37,6 @@ public:
 	void init_xywh(float ix, float iy, float iw, float ih);
 	void init_xy12(float ix1, float iy1, float ix2, float iy2);
 	void init_xysr(float ixc, float iyc, float is, float ir);
-	void init_xy12_given();
 
 	friend std::ostream & operator <<(std::ostream &os, const BBox &bb);
 	static double GetIOU(const BBox& bb_test, const BBox& bb_gt);

@@ -63,16 +63,18 @@ void TestSORT(string seqName)
 	istringstream ss;
 	vector<TrackingBox> detData;
 	char ch;
+	float tpx, tpy, tpw, tph;
 
 	while ( getline(detectionFile, detLine) )
 	{
 		TrackingBox tb;
+		
 		ss.str(detLine);
 		ss >> tb.frame >> ch >> tb.id >> ch;
-		ss >> tb.box.x1 >> ch >> tb.box.y1 >> ch >> tb.box.x2 >> ch >> tb.box.y2;
+		ss >> tpx >> ch >> tpy >> ch >> tpw >> ch >> tph;
 		ss.str("");
 
-		tb.box.init_xy12_given();
+		tb.box = BBox(tpx, tpy, tpw, tph, BBox::XYWH);
 		detData.push_back(tb);
 	}
 	detectionFile.close();

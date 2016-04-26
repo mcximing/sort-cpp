@@ -127,27 +127,6 @@ void BBox::init_xysr(float ixc, float iyc, float is, float ir)
 	}
 }
 
-// initialize remainings with x1,y1,x2,y2 already set
-void BBox::init_xy12_given()
-{
-	x = x1;
-	y = y1;
-	w = (float)(x2 - x1);
-	h = (float)(y2 - y1);
-
-	xc = (x + w / 2);
-	yc = (y + h / 2);
-	s = w * h;
-	r = w / h;
-
-	if (w < 0 || h < 0 || x < 0 || y < 0)
-	{
-		//std::cerr << "Error: Illegal Definition." << std::endl;
-		//std::cerr << "Data: " << xc << ", " << yc << ", " << s << ", " << r << std::endl;
-		init_null();
-	}
-}
-
 void BBox::init_null()
 {
 	x = y = x1 = y1 = x2 = y2 = -1;
