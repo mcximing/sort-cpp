@@ -32,10 +32,11 @@ void KalmanTracker::init_kf(StateType stateMat)
 	setIdentity(kf.errorCovPost, Scalar::all(1));
 
 	//randn(kf.statePost, Scalar::all(0), Scalar::all(1));
-	kf.statePost.at<float>(0, 0) = stateMat.get_xc();
-	kf.statePost.at<float>(1, 0) = stateMat.get_yc();
-	kf.statePost.at<float>(2, 0) = stateMat.get_s();
-	kf.statePost.at<float>(3, 0) = stateMat.get_r();
+	
+	kf.statePost.at<float>(0, 0) = stateMat.x + stateMat.width / 2;
+	kf.statePost.at<float>(1, 0) = stateMat.y + stateMat.height / 2;
+	kf.statePost.at<float>(2, 0) = stateMat.area();
+	kf.statePost.at<float>(3, 0) = stateMat.width / stateMat.height;
 }
 
 
@@ -50,7 +51,7 @@ StateType KalmanTracker::predict()
 		m_hit_streak = 0;
 	m_time_since_update += 1;
 
-	BBox predictBox = BBox(p.at<float>(0, 0), p.at<float>(1, 0), p.at<float>(2, 0), p.at<float>(3, 0), BBox::XYSR);
+	StateType predictBox = get_rect_xysr(p.at<float>(0, 0), p.at<float>(1, 0), p.at<float>(2, 0), p.at<float>(3, 0));
 
 	m_history.push_back(predictBox);
 	return m_history.back();
@@ -66,10 +67,10 @@ void KalmanTracker::update(StateType stateMat)
 	m_hit_streak += 1;
 
 	// measurement
-	measurement.at<float>(0, 0) = stateMat.get_xc();
-	measurement.at<float>(1, 0) = stateMat.get_yc();
-	measurement.at<float>(2, 0) = stateMat.get_s();
-	measurement.at<float>(3, 0) = stateMat.get_r();
+	measurement.at<float>(0, 0) = stateMat.x + stateMat.width / 2;
+	measurement.at<float>(1, 0) = stateMat.y + stateMat.height / 2;
+	measurement.at<float>(2, 0) = stateMat.area();
+	measurement.at<float>(3, 0) = stateMat.width / stateMat.height;
 
 	// update
 	kf.correct(measurement);
@@ -79,11 +80,24 @@ void KalmanTracker::update(StateType stateMat)
 StateType KalmanTracker::get_state()
 {
 	Mat s = kf.statePost;
-	return BBox(s.at<float>(0, 0), s.at<float>(1, 0), s.at<float>(2, 0), s.at<float>(3, 0));
+	return get_rect_xysr(s.at<float>(0, 0), s.at<float>(1, 0), s.at<float>(2, 0), s.at<float>(3, 0));
 }
 
 
+StateType KalmanTracker::get_rect_xysr(float cx, float cy, float s, float r)
+{
+	float w = sqrt(s * r);
+	float h = s / w;
+	float x = (cx - w / 2);
+	float y = (cy - h / 2);
 
+	if (x < 0 && cx > 0)
+		x = 0;
+	if (y < 0 && cy > 0)
+		y = 0;
+
+	return StateType(x, y, w, h);
+}
 
 
 

@@ -11,13 +11,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BBox.cpp" />
     <ClCompile Include="Hungarian.cpp" />
     <ClCompile Include="KalmanTracker.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BBox.h" />
     <ClInclude Include="Hungarian.h" />
     <ClInclude Include="KalmanTracker.h" />
   </ItemGroup>

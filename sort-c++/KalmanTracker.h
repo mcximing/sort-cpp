@@ -7,21 +7,19 @@
 #include "opencv2/video/tracking.hpp"
 #include "opencv2/highgui/highgui.hpp"
 
-#include "BBox.h"
-
 using namespace std;
 using namespace cv;
 
-#define StateType BBox
+#define StateType Rect_<float>
 
 
-// This class represents the internel state of individual tracked objects observed as bbox.
+// This class represents the internel state of individual tracked objects observed as bounding box.
 class KalmanTracker
 {
 public:
 	KalmanTracker()
 	{
-		init_kf(BBox());
+		init_kf(StateType());
 		m_time_since_update = 0;
 		m_hits = 0;
 		m_hit_streak = 0;
@@ -29,7 +27,7 @@ public:
 		m_id = kf_count;
 		//kf_count++;
 	}
-	KalmanTracker(BBox initRect)
+	KalmanTracker(StateType initRect)
 	{
 		init_kf(initRect);
 		m_time_since_update = 0;
@@ -47,7 +45,9 @@ public:
 
 	StateType predict();
 	void update(StateType stateMat);
+	
 	StateType get_state();
+	StateType get_rect_xysr(float cx, float cy, float s, float r);
 
 	static int kf_count;
 
@@ -63,7 +63,7 @@ private:
 	cv::KalmanFilter kf;
 	cv::Mat measurement;
 
-	std::vector<BBox> m_history;
+	std::vector<StateType> m_history;
 };
 
 

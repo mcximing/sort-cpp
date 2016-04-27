@@ -30,7 +30,6 @@
 
 #include "Hungarian.h"
 #include "KalmanTracker.h"
-#include "BBox.h"
 
 #include "opencv2/video/tracking.hpp"
 #include "opencv2/highgui/highgui.hpp"
@@ -44,8 +43,22 @@ typedef struct TrackingBox
 {
 	int frame;
 	int id;
-	BBox box;
+	Rect_<float> box;
 }TrackingBox;
+
+
+// Computes IOU between two Boxes
+double GetIOU(Rect_<float> bb_test, Rect_<float> bb_gt)
+{
+	float in = (bb_test & bb_gt).area();
+	float un = bb_test.area() + bb_gt.area() - in;
+
+	if (un < DBL_EPSILON)
+		return 0;
+
+	return (double)(in / un);
+}
+
 
 
 #define CNUM 20
@@ -116,7 +129,7 @@ void TestSORT(string seqName, bool display)
 		ss >> tpx >> ch >> tpy >> ch >> tpw >> ch >> tph;
 		ss.str("");
 
-		tb.box = BBox(tpx, tpy, tpw, tph, BBox::XYWH);
+		tb.box = Rect_<float>(Point_<float>(tpx, tpy), Point_<float>(tpx + tpw, tpy + tph));
 		detData.push_back(tb);
 	}
 	detectionFile.close();
@@ -149,7 +162,7 @@ void TestSORT(string seqName, bool display)
 	KalmanTracker::kf_count = 0; // tracking id relies on this, so we have to reset it in each seq.
 
 	// variables used in the for-loop
-	vector<BBox> predictedBoxes;
+	vector<Rect_<float>> predictedBoxes;
 	vector<vector<double>> iouMatrix;
 	vector<int> assignment;
 	set<int> unmatchedDetections;
@@ -199,7 +212,7 @@ void TestSORT(string seqName, bool display)
 			for (unsigned int id = 0; id < detFrameData[fi].size(); id++)
 			{
 				TrackingBox tb = detFrameData[fi][id];
-				resultsFile << tb.frame << "," << id + 1 << "," << tb.box << ",1,-1,-1,-1" << endl;
+				resultsFile << tb.frame << "," << id + 1 << "," << tb.box.x << "," << tb.box.y << "," << tb.box.width << "," << tb.box.height << ",1,-1,-1,-1" << endl;
 			}
 			continue;
 		}
@@ -210,8 +223,8 @@ void TestSORT(string seqName, bool display)
 
 		for (auto it = trackers.begin(); it != trackers.end();)
 		{
-			BBox pBox = (*it).predict();
-			if (pBox.valid)
+			Rect_<float> pBox = (*it).predict();
+			if (pBox.x >= 0 && pBox.y >= 0)
 			{
 				predictedBoxes.push_back(pBox);
 				it++;
@@ -237,7 +250,7 @@ void TestSORT(string seqName, bool display)
 			for (unsigned int j = 0; j < detNum; j++)
 			{
 				// use 1-iou because the hungarian algorithm computes a minimum-cost assignment.
-				iouMatrix[i][j] = 1 - BBox::GetIOU(predictedBoxes[i], detFrameData[fi][j].box);
+				iouMatrix[i][j] = 1 - GetIOU(predictedBoxes[i], detFrameData[fi][j].box);
 			}
 		}
 
@@ -335,7 +348,7 @@ void TestSORT(string seqName, bool display)
 		total_time += cycle_time / getTickFrequency();
 
 		for (auto tb : frameTrackingResult)
-			resultsFile << tb.frame << "," << tb.id << "," << tb.box << ",1,-1,-1,-1" << endl;
+			resultsFile << tb.frame << "," << tb.id << "," << tb.box.x << "," << tb.box.y << "," << tb.box.width << "," << tb.box.height << ",1,-1,-1,-1" << endl;
 
 		if (display)
 		{
@@ -346,7 +359,7 @@ void TestSORT(string seqName, bool display)
 				continue;
 			
 			for (auto tb : frameTrackingResult)
-				cv::rectangle(img, cv::Rect(tb.box.get_x(), tb.box.get_y(), tb.box.get_w(), tb.box.get_h()), randColor[tb.id % CNUM], 2, 8, 0);
+				cv::rectangle(img, tb.box, randColor[tb.id % CNUM], 2, 8, 0);
 			imshow(seqName, img);
 			cvWaitKey(40);
 		}

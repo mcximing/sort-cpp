@@ -21,17 +21,11 @@
     <ClCompile Include="KalmanTracker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="BBox.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Hungarian.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BBox.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="KalmanTracker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
