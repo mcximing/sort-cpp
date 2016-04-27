@@ -6,7 +6,7 @@ Original Python code and publication infomation found at https://github.com/abew
 
 This code has been tested on Windows with Visual Studio Community 2013 + OpenCV 2.4.8. It depends on OpenCV without any other libs, so theoretically it can be compiled on Linux with OpenCV support.
 
-Detection data in The ./data folder come from the original directory of SORT. They are the **Faster** RCNN detections for the MOT benchmark sequences in the benchmark format, created by Alex Bewley.
+Detection data in The ./data folder come from the original directory of SORT. They are the *Faster* RCNN detections for the MOT benchmark sequences in the benchmark format, created by Alex Bewley.
 
 The Hungarian algorithm implementation comes from https://github.com/mcximing/hungarian-algorithm-cpp, which is derived from [Markus Buehren's code](http://www.mathworks.com/matlabcentral/fileexchange/6543-functions-for-the-rectangular-assignment-problem).
 
@@ -26,8 +26,8 @@ Using the [MOT challenge devkit](https://motchallenge.net/devkit/) this code pro
  ADL-Rundle-8   | 44.3  75.3  1.50| 28   6  15   7|  984  3777  110  214|  28.2  70.9  29.8
  Venice-2       | 42.6  64.7  2.77| 26   8  11   7| 1663  4097   63  112|  18.5  72.7  19.3
  KITTI-17       | 67.9  92.6  0.26|  9   1   8   0|   37   219   13   16|  60.6  72.6  62.4
- *Overall*      | 49.5  77.1  1.28|234  48 113  73| 3398 11660  300  529|  33.5  73.1  34.8
+ **Overall**    | 49.5  77.1  1.28|234  48 113  73| 3398 11660  300  529|  33.5  73.1  34.8
 
 A bit worse than original SORT but not significantly. This may due to my keeping the default parameters of Kalman filters.
-
+The speed of this implementation is at about 1600+ FPS, or ~3.2 seconds over 5500 frames on my machine, with the Debug configuration. 
 

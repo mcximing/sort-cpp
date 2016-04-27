@@ -28,6 +28,10 @@ public:
 	void init_xy12(float ix1, float iy1, float ix2, float iy2);
 	void init_xysr(float ixc, float iyc, float is, float ir);
 	
+	float get_x();
+	float get_y();
+	float get_w();
+	float get_h();
 	float get_xc();
 	float get_yc();
 	float get_s();

@@ -1,17 +1,22 @@
 ///////////////////////////////////////////////////////////////////////////////
 //  SORT: A Simple, Online and Realtime Tracker
-//  Copyright (C) 2016 Alex Bewley alex@dynamicdetection.com
+//  
+//  This is a C++ reimplementation of the open source tracker in
+//  https://github.com/abewley/sort
+//  Based on the work of Alex Bewley, alex@dynamicdetection.com, 2016
 //
+//  Cong Ma, mcximing@sina.cn, 2016
+//  
 //  This program is free software: you can redistribute it and/or modify
 //  it under the terms of the GNU General Public License as published by
 //  the Free Software Foundation, either version 3 of the License, or
 //  (at your option) any later version.
-//
+//  
 //  This program is distributed in the hope that it will be useful,
 //  but WITHOUT ANY WARRANTY; without even the implied warranty of
 //  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 //  GNU General Public License for more details.
-//
+//  
 //  You should have received a copy of the GNU General Public License
 //  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ///////////////////////////////////////////////////////////////////////////////
@@ -19,13 +24,13 @@
 
 #include <iostream>
 #include <fstream>
-#include <time.h>
+#include <iomanip> // to format image names using setw() and setfill()
+#include <io.h>    // to check file existence using POSIX function access(). On Linux include <unistd.h>.
 #include <set>
 
 #include "Hungarian.h"
 #include "KalmanTracker.h"
 #include "BBox.h"
-
 
 #include "opencv2/video/tracking.hpp"
 #include "opencv2/highgui/highgui.hpp"
@@ -43,8 +48,30 @@ typedef struct TrackingBox
 }TrackingBox;
 
 
+#define CNUM 20
+int total_frames = 0;
+double total_time = 0.0;
 
-void TestSORT(string seqName)
+void TestSORT(string seqName, bool display);
+
+
+
+int main()
+{
+	vector<string> sequences = { "PETS09-S2L1", "TUD-Campus", "TUD-Stadtmitte", "ETH-Bahnhof", "ETH-Sunnyday", "ETH-Pedcross2", "KITTI-13", "KITTI-17", "ADL-Rundle-6", "ADL-Rundle-8", "Venice-2" };
+	for (auto seq : sequences)
+		TestSORT(seq, false);
+	//TestSORT("PETS09-S2L1", true);
+
+	// Note: time counted here is of tracking procedure, while the running speed bottleneck is opening and parsing detectionFile.
+	cout << "Total Tracking took: " << total_time << " for " << total_frames << " frames or " << ((double)total_frames / (double)total_time) << " FPS" << endl;
+
+	return 0;
+}
+
+
+
+void TestSORT(string seqName, bool display)
 {
 	cout << "Processing " << seqName << "..." << endl;
 
@@ -59,6 +86,21 @@ void TestSORT(string seqName)
 		return;
 	}
 
+	// randomly generate colors, only for display
+	RNG rng(0xFFFFFFFF);
+	Scalar_<int> randColor[CNUM];
+	for (int i = 0; i < CNUM; i++)
+		rng.fill(randColor[i], RNG::UNIFORM, 0, 256);
+
+	string imgPath = "D:/Data/Track/2DMOT2015/train/" + seqName + "/img1/";
+
+	if (display)
+		if (_access(imgPath.c_str(), 0) == -1)
+		{
+			cerr << "Image path not found!" << endl;
+			display = false;
+		}
+
 	string detLine;
 	istringstream ss;
 	vector<TrackingBox> detData;
@@ -68,7 +110,7 @@ void TestSORT(string seqName)
 	while ( getline(detectionFile, detLine) )
 	{
 		TrackingBox tb;
-		
+
 		ss.str(detLine);
 		ss >> tb.frame >> ch >> tb.id >> ch;
 		ss >> tpx >> ch >> tpy >> ch >> tpw >> ch >> tph;
@@ -78,7 +120,6 @@ void TestSORT(string seqName)
 		detData.push_back(tb);
 	}
 	detectionFile.close();
-
 
 	int maxFrame = 0;
 	for (auto tb : detData)
@@ -100,7 +141,7 @@ void TestSORT(string seqName)
 	}
 
 	// 3. update across frames
-	int total_frames = 0;
+	int frame_count = 0;
 	int max_age = 1;
 	int min_hits = 3;
 	double iouThreshold = 0.3;
@@ -120,6 +161,9 @@ void TestSORT(string seqName)
 	unsigned int trkNum = 0;
 	unsigned int detNum = 0;
 
+	double cycle_time = 0.0;
+	int64 start_time = 0;
+
 	// prepare result file.
 	ofstream resultsFile;
 	string resFileName = "output/" + seqName + ".txt";
@@ -130,13 +174,18 @@ void TestSORT(string seqName)
 		cerr << "Error: can not create file " << resFileName << endl;
 		return;
 	}
-	
+
 	//////////////////////////////////////////////
 	// main loop
 	for (int fi = 0; fi < maxFrame; fi++)
 	{
 		total_frames++;
-		//cout << total_frames << endl;
+		frame_count++;
+		//cout << frame_count << endl;
+
+		// I used to count running time using clock(), but found it seems to conflict with cv::cvWaitkey(),
+		// when they both exists, clock() can not get right result. Now I use cv::getTickCount() instead.
+		start_time = getTickCount();
 
 		if (trackers.size() == 0) // the first frame met
 		{
@@ -170,7 +219,7 @@ void TestSORT(string seqName)
 			else
 			{
 				it = trackers.erase(it);
-				//cerr << "Box invalid at frame: " << total_frames << endl;
+				//cerr << "Box invalid at frame: " << frame_count << endl;
 			}
 		}
 
@@ -264,13 +313,13 @@ void TestSORT(string seqName)
 		frameTrackingResult.clear();
 		for (auto it = trackers.begin(); it != trackers.end();)
 		{
-			if ( ((*it).m_time_since_update < 1) && 
-				((*it).m_hit_streak >= min_hits || total_frames <= min_hits))
+			if (((*it).m_time_since_update < 1) &&
+				((*it).m_hit_streak >= min_hits || frame_count <= min_hits))
 			{
 				TrackingBox res;
 				res.box = (*it).get_state();
 				res.id = (*it).m_id + 1;
-				res.frame = total_frames;
+				res.frame = frame_count;
 				frameTrackingResult.push_back(res);
 				it++;
 			}
@@ -282,21 +331,29 @@ void TestSORT(string seqName)
 				it = trackers.erase(it);
 		}
 
+		cycle_time = (double)(getTickCount() - start_time);
+		total_time += cycle_time / getTickFrequency();
+
 		for (auto tb : frameTrackingResult)
 			resultsFile << tb.frame << "," << tb.id << "," << tb.box << ",1,-1,-1,-1" << endl;
+
+		if (display)
+		{
+			ostringstream oss;
+			oss << imgPath << setw(6) << setfill('0') << fi + 1;
+			Mat img = imread(oss.str() + ".jpg");
+			if (img.empty())
+				continue;
+			
+			for (auto tb : frameTrackingResult)
+				cv::rectangle(img, cv::Rect(tb.box.get_x(), tb.box.get_y(), tb.box.get_w(), tb.box.get_h()), randColor[tb.id % CNUM], 2, 8, 0);
+			imshow(seqName, img);
+			cvWaitKey(40);
+		}
 	}
 
 	resultsFile.close();
-}
 
-
-
-int main()
-{
-	vector<string> sequences = { "PETS09-S2L1", "TUD-Campus", "TUD-Stadtmitte", "ETH-Bahnhof", "ETH-Sunnyday", "ETH-Pedcross2", "KITTI-13", "KITTI-17", "ADL-Rundle-6", "ADL-Rundle-8", "Venice-2" };
-	for (auto seq : sequences)
-		TestSORT(seq);
-	//TestSORT("TUD-Campus");
-
-	return 0;
+	if (display)
+		destroyAllWindows();
 }

@@ -136,6 +136,10 @@ void BBox::init_null()
 }
 
 
+float BBox::get_x(){ return x; }
+float BBox::get_y(){ return y; }
+float BBox::get_w(){ return w; }
+float BBox::get_h(){ return h; }
 float BBox::get_xc(){ return xc; }
 float BBox::get_yc(){ return yc; }
 float BBox::get_s(){ return s; }
