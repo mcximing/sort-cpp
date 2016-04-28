@@ -47,7 +47,7 @@ typedef struct TrackingBox
 }TrackingBox;
 
 
-// Computes IOU between two Boxes
+// Computes IOU between two bounding boxes
 double GetIOU(Rect_<float> bb_test, Rect_<float> bb_gt)
 {
 	float in = (bb_test & bb_gt).area();
@@ -60,7 +60,7 @@ double GetIOU(Rect_<float> bb_test, Rect_<float> bb_gt)
 }
 
 
-
+// global variables for counting
 #define CNUM 20
 int total_frames = 0;
 double total_time = 0.0;
@@ -88,18 +88,7 @@ void TestSORT(string seqName, bool display)
 {
 	cout << "Processing " << seqName << "..." << endl;
 
-	// 1. read detection file
-	ifstream detectionFile;
-	string detFileName = "data/" + seqName + "/det.txt";
-	detectionFile.open(detFileName);
-
-	if (!detectionFile.is_open())
-	{
-		cerr << "Error: can not find file " << detFileName << endl;
-		return;
-	}
-
-	// randomly generate colors, only for display
+	// 0. randomly generate colors, only for display
 	RNG rng(0xFFFFFFFF);
 	Scalar_<int> randColor[CNUM];
 	for (int i = 0; i < CNUM; i++)
@@ -113,6 +102,17 @@ void TestSORT(string seqName, bool display)
 			cerr << "Image path not found!" << endl;
 			display = false;
 		}
+
+	// 1. read detection file
+	ifstream detectionFile;
+	string detFileName = "data/" + seqName + "/det.txt";
+	detectionFile.open(detFileName);
+
+	if (!detectionFile.is_open())
+	{
+		cerr << "Error: can not find file " << detFileName << endl;
+		return;
+	}
 
 	string detLine;
 	istringstream ss;
@@ -134,14 +134,14 @@ void TestSORT(string seqName, bool display)
 	}
 	detectionFile.close();
 
+	// 2. group detData by frame
 	int maxFrame = 0;
-	for (auto tb : detData)
+	for (auto tb : detData) // find max frame number
 	{
 		if (maxFrame < tb.frame)
 			maxFrame = tb.frame;
 	}
 
-	// 2. group detData by frame
 	vector<vector<TrackingBox>> detFrameData;
 	vector<TrackingBox> tempVec;
 	for (int fi = 0; fi < maxFrame; fi++)
@@ -350,7 +350,7 @@ void TestSORT(string seqName, bool display)
 		for (auto tb : frameTrackingResult)
 			resultsFile << tb.frame << "," << tb.id << "," << tb.box.x << "," << tb.box.y << "," << tb.box.width << "," << tb.box.height << ",1,-1,-1,-1" << endl;
 
-		if (display)
+		if (display) // read image, draw results and show them
 		{
 			ostringstream oss;
 			oss << imgPath << setw(6) << setfill('0') << fi + 1;

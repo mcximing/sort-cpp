@@ -14,7 +14,6 @@ void KalmanTracker::init_kf(StateType stateMat)
 	int measureNum = 4;
 	kf = KalmanFilter(stateNum, measureNum, 0);
 
-	//Mat processNoise(stateNum, 1, CV_32F);
 	measurement = Mat::zeros(measureNum, 1, CV_32F);
 
 	kf.transitionMatrix = *(Mat_<float>(stateNum, stateNum) <<
@@ -30,9 +29,8 @@ void KalmanTracker::init_kf(StateType stateMat)
 	setIdentity(kf.processNoiseCov, Scalar::all(1e-2));
 	setIdentity(kf.measurementNoiseCov, Scalar::all(1e-1));
 	setIdentity(kf.errorCovPost, Scalar::all(1));
-
-	//randn(kf.statePost, Scalar::all(0), Scalar::all(1));
 	
+	// initialize state vector with bounding box in [cx,cy,s,r] style
 	kf.statePost.at<float>(0, 0) = stateMat.x + stateMat.width / 2;
 	kf.statePost.at<float>(1, 0) = stateMat.y + stateMat.height / 2;
 	kf.statePost.at<float>(2, 0) = stateMat.area();
@@ -40,7 +38,7 @@ void KalmanTracker::init_kf(StateType stateMat)
 }
 
 
-// Advances the state vector and returns the predicted bounding box estimate.
+// Predict the estimated bounding box.
 StateType KalmanTracker::predict()
 {
 	// predict
@@ -58,7 +56,7 @@ StateType KalmanTracker::predict()
 }
 
 
-// Updates the state vector with observed bbox.
+// Update the state vector with observed bounding box.
 void KalmanTracker::update(StateType stateMat)
 {
 	m_time_since_update = 0;
@@ -77,6 +75,7 @@ void KalmanTracker::update(StateType stateMat)
 }
 
 
+// Return the current state vector
 StateType KalmanTracker::get_state()
 {
 	Mat s = kf.statePost;
@@ -84,6 +83,7 @@ StateType KalmanTracker::get_state()
 }
 
 
+// Convert bounding box from [cx,cy,s,r] to [x,y,w,h] style.
 StateType KalmanTracker::get_rect_xysr(float cx, float cy, float s, float r)
 {
 	float w = sqrt(s * r);
@@ -103,7 +103,7 @@ StateType KalmanTracker::get_rect_xysr(float cx, float cy, float s, float r)
 
 /*
 // --------------------------------------------------------------------
-// Kalman Filter Demonstrating
+// Kalman Filter Demonstrating, a 2-d ball demo
 // --------------------------------------------------------------------
 
 const int winHeight = 600;
