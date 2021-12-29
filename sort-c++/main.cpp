@@ -27,6 +27,7 @@
 #include <iomanip> // to format image names using setw() and setfill()
 #include <io.h>    // to check file existence using POSIX function access(). On Linux include <unistd.h>.
 #include <set>
+#include <cfloat>
 
 #include "Hungarian.h"
 #include "KalmanTracker.h"

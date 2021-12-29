@@ -10,7 +10,8 @@
 // 
 
 #include "Hungarian.h"
-
+#include <cmath>
+#include <cfloat>
 
 HungarianAlgorithm::HungarianAlgorithm(){}
 HungarianAlgorithm::~HungarianAlgorithm(){}
